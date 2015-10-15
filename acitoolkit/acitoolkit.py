@@ -1758,6 +1758,15 @@ class BridgeDomain(BaseACIObject):
 
         self.mac = mac
 
+    def get_mac(self):
+        """
+        Get the mac address for the BD
+
+        :returns: string containing the mac address of the BD (e.g. 00:22:BD:F8:19:FF)
+        """
+
+        return self.mac
+
     def set_unknown_multicast(self, multicast):
         """
         Set the unknown multicast for this BD
@@ -1794,6 +1803,14 @@ class BridgeDomain(BaseACIObject):
         """
         return self.arp_flood == 'yes'
 
+    def get_arp_flood(self):
+        """
+        Get the ARP flooding policy for this BD
+
+        :returns: a string containing the ARP flooding policy of the BridgeDomain
+        """
+        return self.arp_flood
+
     def set_unicast_route(self, route):
         """
         Set the unicast route for this BD
@@ -1821,6 +1838,14 @@ class BridgeDomain(BaseACIObject):
         if multidestination not in valid_multidestination:
             raise ValueError('multidestination must be of: %s, %s or %s' % valid_multidestination)
         self.multidestination = multidestination
+
+    def get_unicast_route(self):
+        """
+        Get the Unicast Routing policy for this BD
+
+        :returns: a string containing the unicast routing policy of the BridgeDomain
+        """
+        return self.unicast_route
 
     def get_json(self):
         """
