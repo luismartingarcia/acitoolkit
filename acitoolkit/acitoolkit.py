@@ -1690,6 +1690,7 @@ class BridgeDomain(BaseACIObject):
         self.unknown_multicast = 'flood'
         self.arp_flood = 'no'
         self.unicast_route = 'yes'
+        self.multidestination = 'bd-flood'
         self.mac = None
 
     @classmethod
@@ -1808,6 +1809,17 @@ class BridgeDomain(BaseACIObject):
         """
         return self.unicast_route == 'yes'
 
+    def set_multidestination(self, multidestination):
+        """
+        Set the multidestination flood policy for this BD
+
+        :param multidestination: policy to assign this BridgeDomain
+        """
+        valid_multidestination = ('drop', 'bd-flood', 'encap-flood')
+        if multidestination not in valid_multidestination:
+            raise ValueError('multidestination must be of: %s, %s or %s' % valid_multidestination)
+        self.multidestination = multidestination
+
     def get_json(self):
         """
         Returns json representation of the bridge domain
@@ -1827,6 +1839,7 @@ class BridgeDomain(BaseACIObject):
         attr['unkMcastAct'] = self.unknown_multicast
         attr['arpFlood'] = self.arp_flood
         attr['unicastRoute'] = self.unicast_route
+        attr['multiDstPktAct'] = self.multidestination
         if self.mac:
             attr['mac'] = self.mac
         return super(BridgeDomain, self).get_json(self._get_apic_classes()[0],
