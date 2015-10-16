@@ -1828,6 +1828,14 @@ class BridgeDomain(BaseACIObject):
         """
         return self.unicast_route == 'yes'
 
+    def get_unicast_route(self):
+        """
+        Get the Unicast Routing policy for this BD
+
+        :returns: a string containing the unicast routing policy of the BridgeDomain
+        """
+        return self.unicast_route
+
     def set_multidestination(self, multidestination):
         """
         Set the multidestination flood policy for this BD
