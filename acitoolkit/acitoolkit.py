@@ -2140,9 +2140,9 @@ class Subnet(BaseACIObject):
         """
         Set the subnet address
 
-        :param scope: The subnet scope. It can be either "public", "private".
+        :param scope: The subnet scope. It can be either "public" or "private".
         :param scope may optionally contain ",shared" appended, to mark the
-        subnet as leakable to other VRFs withing the fabric.
+        subnet as leakable to other VRFs within the fabric.
         """
         if scope is None:
             raise TypeError('Scope can not be set to None')
