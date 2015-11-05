@@ -20,7 +20,7 @@
 """
 Reports: ACI Toolkit report GUI.
 """
-from flask import Flask, session, redirect, url_for, jsonify, render_template
+from flask import Flask, session, redirect, url_for, jsonify
 from flask import flash, request
 from flask.ext import admin
 # from flask import Flask
@@ -106,16 +106,31 @@ class SelectSwitchView(BaseView):
         global sdb
         form = SearchBar()
         report = {}
+
+        # object view data
+        apic_object_dn = str(request.args.get('dn'))
+        if apic_object_dn is not None:
+
+            if sdb.by_attr == {}:
+                apic_args = APICArgs(session['ipaddr'], session['username'], session['secure'], session['password'])
+                sdb = SearchDb.load_db(apic_args)
+            if apic_object_dn != 'None':
+                atk_object_info = sdb.get_object_info(apic_object_dn)
+            else:
+                atk_object_info = sdb.get_object_info('/')
+        else:
+            atk_object_info = 'None'
+
         # load data from file if it has not been otherwise loaded
-        if sdb.by_key == {}:
+        if sdb.by_attr == {}:
             apic_args = APICArgs(session['ipaddr'], session['username'], session['secure'], session['password'])
-            sdb = SearchDb.load_db(False, apic_args)
+            sdb = SearchDb.load_db(apic_args)
         if form.validate_on_submit() and form.submit.data:
 
             if form.data['reload']:
                 print 'reload'
                 apic_args = APICArgs(session['ipaddr'], session['username'], session['secure'], session['password'])
-                sdb = SearchDb.load_db(True, apic_args)
+                sdb = SearchDb.load_db(apic_args)
             try:
                 report = sdb.get_search_result(form.data['search_field'])
             except Timeout:
@@ -127,10 +142,22 @@ class SelectSwitchView(BaseView):
             except ConnectionError:
                 flash('Connection failure.  Perhaps \'secure\' setting is wrong')
                 return redirect(url_for('credentialsview.index'))
+
         if report != {}:
-            return self.render('search_result.html', form=form, report=report, keys=sdb.keywords, values=sdb.values)
+            return self.render('search_result.html',
+                               form=form,
+                               report=report,
+                               classes=sdb.classes,
+                               attrs=sdb.attrs,
+                               values=sdb.values,
+                               result=atk_object_info)
         else:
-            return self.render('search_result.html', form=form, keys=sdb.keywords, values=sdb.values)
+            return self.render('search_result.html',
+                               form=form,
+                               classes=sdb.classes,
+                               attrs=sdb.attrs,
+                               values=sdb.values,
+                               result=atk_object_info)
 
 
 class About(BaseView):
@@ -160,9 +187,9 @@ class ShowObjectView(BaseView):
         """
         global sdb
         apic_object_dn = str(request.args.get('dn'))
-        if sdb.by_key == {}:
+        if sdb.by_attr == {}:
             apic_args = APICArgs(session['ipaddr'], session['username'], session['secure'], session['password'])
-            sdb = SearchDb.load_db(False, apic_args)
+            sdb = SearchDb.load_db(apic_args)
         if apic_object_dn != 'None':
             atk_object_info = sdb.get_object_info(apic_object_dn)
         else:
@@ -236,10 +263,10 @@ admin = admin.Admin(app,
 
 # Add views
 admin.add_view(CredentialsView(name='Credentials'))
-admin.add_view(About(name='About', endpoint='about', category='Test'))
+admin.add_view(About(name='About', endpoint='about'))
 admin.add_view(Feedback(name='Feedback'))
-admin.add_view(SelectSwitchView(name='ACI Search'))
-admin.add_view(ShowObjectView(name='Object View', endpoint='atk_object'))
+admin.add_view(SelectSwitchView(name='Search'))
+# admin.add_view(ShowObjectView(name='Object View', endpoint='atk_object'))
 
 
 @app.route("/search/<search_terms>")
@@ -251,11 +278,11 @@ def search_result_page(search_terms='1/101/1/49'):
     terms = str(request.args['first'])
     print 'search terms', terms
 
-    result, total_hits = sdb.get_search_result(terms)
+    result, total_hits = sdb.search(terms)
     return jsonify(result=result, total_hits=total_hits)
 
 if __name__ == '__main__':
-    description = 'ACI Search Viewer Tool.'
+    description = 'ACI Search Tool.'
     creds = Credentials('server', description)
     creds.add_argument('--force',
                        action="store_true",
